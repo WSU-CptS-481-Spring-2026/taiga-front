@@ -152,6 +152,7 @@
             "SLUG": "Slug",
             "COLOR": "Color",
             "IS_CLOSED": "Is closed?",
+            "IS_ARCHIVED": "Archived",
             "STATUS": "Status",
             "TYPE": "Type",
             "SEVERITY": "Severity",
