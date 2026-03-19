@@ -487,7 +487,7 @@ gulp.task("locales", function() {
 });
 
 gulp.task("coffee-lint", function () {
-    gulp.src([
+    return gulp.src([
         paths.app + "modules/**/*.coffee",
         "!" + paths.app + "modules/**/*.spec.coffee"
     ])
