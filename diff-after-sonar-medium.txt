@@ -1,0 +1,228 @@
+diff --git a/app/js/medium-mention.js b/app/js/medium-mention.js
+index ab12fa18b..ce4bf6bff 100644
+--- a/app/js/medium-mention.js
++++ b/app/js/medium-mention.js
+@@ -6,7 +6,7 @@
+  * Copyright (c) 2021-present Kaleidos INC
+  */
+ 
+-var MentionExtension = MediumEditor.Extension.extend({
++const MentionExtension = MediumEditor.Extension.extend({
+     name: 'mediumMention',
+     init: function() {
+         this.subscribe('editableKeyup', this.handleKeyup.bind(this));
+@@ -23,24 +23,24 @@ var MentionExtension = MediumEditor.Extension.extend({
+         }
+     },
+     handleKeydown: function(e) {
+-        var code = e.keyCode ? e.keyCode : e.which;
++        const code = e.keyCode ? e.keyCode : e.which;
+ 
+         if (this.mentionPanel && code === MediumEditor.util.keyCode.ENTER) {
+             e.preventDefault();
+         }
+     },
+     handleKeyup: function(e) {
+-        var code = e.keyCode ? e.keyCode : e.which;
+-        var isSpace = code === MediumEditor.util.keyCode.SPACE;
+-        var isBackspace = code === MediumEditor.util.keyCode.BACKSPACE;
++        const code = e.keyCode ? e.keyCode : e.which;
++        const isSpace = code === MediumEditor.util.keyCode.SPACE;
++        const isBackspace = code === MediumEditor.util.keyCode.BACKSPACE;
+ 
+         if (this.mentionPanel) {
+             this.keyDownMentionPanel(e);
+         }
+ 
+-        var moveKeys = [37, 38, 39, 40];
++        const moveKeys = [37, 38, 39, 40];
+ 
+-        if (moveKeys.indexOf(code) !== -1) {
++        if (!moveKeys.includes(code)) {
+             return;
+         }
+ 
+@@ -51,13 +51,13 @@ var MentionExtension = MediumEditor.Extension.extend({
+         }
+ 
+         if (!isSpace && this.selection.rangeCount === 1) {
+-            var endChar = this.selection.getRangeAt(0).startOffset;
+-            var textContent = this.selection.focusNode.textContent;
++            const endChar = this.selection.getRangeAt(0).startOffset;
++            let textContent = this.selection.focusNode.textContent;
+ 
+             textContent = textContent.substring(0, endChar);
+             this.word = this.getLastWord(textContent);
+ 
+-            if (this.word.length > 1 && ['@', '#', ':'].indexOf(this.word[0]) != -1) {
++            if (this.word.length > 1 && !this.word[0].includes(['@', '#', ':'])) {
+                 this.wrap();
+                 this.showPanel();
+ 
+@@ -81,8 +81,8 @@ var MentionExtension = MediumEditor.Extension.extend({
+         this.selection = null;
+     },
+     cancelMentionSpace: function() {
+-        if (this.wordNode && this.wordNode.nextSibling) {
+-            var textNode = this.document.createTextNode('');
++        if (this?.wordNode?.nextSibling) {
++            const textNode = this.document.createTextNode('');
+             textNode.textContent = this.word + '\u00A0';
+ 
+             this.wordNode.parentNode.replaceChild(textNode, this.wordNode);
+@@ -93,11 +93,11 @@ var MentionExtension = MediumEditor.Extension.extend({
+         this.reset();
+     },
+     wrap: function() {
+-        var range = this.selection.getRangeAt(0).cloneRange();
++        let range = this.selection.getRangeAt(0).cloneRange();
+ 
+         if (range.startContainer.parentNode.nodeName.toLowerCase() === 'a') {
+-            var parentLink = range.startContainer.parentNode.parentNode;
+-            var textNode = this.document.createTextNode(range.startContainer.parentNode.innerText);
++            const parentLink = range.startContainer.parentNode.parentNode;
++            const textNode = this.document.createTextNode(range.startContainer.parentNode.innerText);
+ 
+             parentLink.replaceChild(textNode, range.startContainer.parentNode);
+ 
+@@ -111,7 +111,9 @@ var MentionExtension = MediumEditor.Extension.extend({
+             this.selection.addRange(range);
+         }
+ 
+-        if (!range.startContainer.parentNode.classList.contains('mention')) {
++        if (range.startContainer.parentNode.classList.contains('mention')) {
++            this.wordNode = range.startContainer.parentNode;
++        } else {
+             this.wordNode = this.document.createElement('span');
+             this.wordNode.classList.add('mention');
+ 
+@@ -126,25 +128,23 @@ var MentionExtension = MediumEditor.Extension.extend({
+             range.setStart(range.endContainer, range.endOffset);
+             this.selection.removeAllRanges();
+             this.selection.addRange(range);
+-        } else {
+-            this.wordNode = range.startContainer.parentNode;
+         }
+     },
+     refreshPositionPanel: function() {
+-        var bound = this.wordNode.getBoundingClientRect();
++        const bound = this.wordNode.getBoundingClientRect();
+ 
+         this.mentionPanel.style.top = this.window.pageYOffset + bound.bottom + 'px';
+         this.mentionPanel.style.left = this.window.pageXOffset + bound.left + 'px';
+     },
+     selectMention: function(item) {
+         if (item.image) {
+-            var img = document.createElement('img');
++            const img = document.createElement('img');
+             img.src = item.image;
+ 
+             this.wordNode.parentNode.replaceChild(img, this.wordNode);
+             this.wordNode = img;
+         } else {
+-            var link = document.createElement('a');
++            const link = document.createElement('a');
+ 
+             link.setAttribute('href', item.url);
+ 
+@@ -158,13 +158,13 @@ var MentionExtension = MediumEditor.Extension.extend({
+             this.wordNode = link;
+         }
+ 
+-        var textNode = this.document.createTextNode('');
++        const textNode = this.document.createTextNode('');
+         textNode.textContent = '\u00A0';
+ 
+         this.wordNode.parentNode.insertBefore(textNode, this.wordNode.nextSibling);
+         MediumEditor.selection.select(this.document, textNode, 1);
+ 
+-        var target = this.base.getFocusedElement();
++        const target = this.base.getFocusedElement();
+ 
+         this.base.events.updateInput(target, {
+           target: target,
+@@ -181,7 +181,7 @@ var MentionExtension = MediumEditor.Extension.extend({
+             return;
+         }
+ 
+-        var  el = this.document.createElement('div');
++        const  el = this.document.createElement('div');
+         el.classList.add('medium-editor-mention-panel');
+         this.mentionPanel = el;
+         this.getEditorOption('elementsContainer').appendChild(el);
+@@ -190,8 +190,8 @@ var MentionExtension = MediumEditor.Extension.extend({
+         this.getItems(this.word, this.renderPanel.bind(this));
+     },
+     keyDownMentionPanel: function(e) {
+-        var code = e.keyCode ? e.keyCode : e.which;
+-        var active = this.mentionPanel.querySelector('.active');
++        const code = e.keyCode ? e.keyCode : e.which;
++        const active = this.mentionPanel.querySelector('.active');
+ 
+         this.wordNode = document.querySelector('span.mention');
+ 
+@@ -203,8 +203,7 @@ var MentionExtension = MediumEditor.Extension.extend({
+             e.preventDefault();
+             e.stopPropagation();
+ 
+-            var event = document.createEvent('HTMLEvents');
+-            event.initEvent('mousedown', true, false);
++            const event = new MouseEvent('mousedown', true, false);
+ 
+             active.dispatchEvent(event);
+ 
+@@ -232,32 +231,29 @@ var MentionExtension = MediumEditor.Extension.extend({
+ 
+         if (!items.length) return;
+ 
+-        var ul = this.document.createElement('ul');
++        const ul = this.document.createElement('ul');
+ 
+         ul.classList.add('medium-mention');
+ 
+         items.forEach(function(it) {
+-            var li = this.document.createElement('li');
++            const li = this.document.createElement('li');
+ 
+             if (it.image) {
+-                var img = this.document.createElement('img');
++                const img = this.document.createElement('img');
+ 
+                 img.src = it.image;
+                 li.appendChild(img);
+ 
+-                var textNode = document.createTextNode('');
++                const textNode = this.document.createTextNode('');
+                 textNode.textContent = ' ' + it.name;
+ 
+                 li.appendChild(textNode);
+-
+             } else if (it.ref) {
+                 li.innerText = '#' + it.ref + ' - ' + it.subject;
++            } else if (it.full_name) {
++                li.innerText = '@' + it.full_name + ' (' + it.username + ')';
+             } else {
+-                if (it.full_name) {
+-                    li.innerText = '@' + it.full_name + ' (' + it.username + ')';
+-                } else {
+-                    li.innerText = '@' + it.username;
+-                }
++                li.innerText = '@' + it.username;
+             }
+ 
+             li.addEventListener('mousedown', this.selectMention.bind(this, it));
+@@ -271,12 +267,12 @@ var MentionExtension = MediumEditor.Extension.extend({
+     },
+     hidePanel: function() {
+         if (this.mentionPanel) {
+-            this.mentionPanel.parentNode.removeChild(this.mentionPanel);
++            this.mentionPanel.remove();
+             this.mentionPanel = null;
+         }
+     },
+     getLastWord: function(text) {
+-        var n = text.split(' ');
++        const n = text.split(' ');
+         return n[n.length - 1].trim();
+     }
+ });
