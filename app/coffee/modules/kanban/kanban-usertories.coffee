@@ -6,17 +6,17 @@
 # Copyright (c) 2021-present Kaleidos INC
 ###
 
-groupBy = @.taiga.groupBy
-
 class KanbanUserstoriesService extends taiga.Service
-    @.$inject = [
-        "$translate"
-    ]
+    @.$inject = ["$translate"]
 
     constructor: (@translate) ->
         @.reset()
 
-    reset: (resetSwimlanesList = true, resetArchivedStatus = true, resetHideStatud = true) ->
+    reset: (
+        resetSwimlanesList = true,
+        resetArchivedStatus = true,
+        resetHideStatud = true
+    ) ->
         @.userstoriesRaw = []
         @.swimlanes = []
         @.foldStatusChanged = {}
@@ -59,7 +59,6 @@ class KanbanUserstoriesService extends taiga.Service
 
     remove: (usModel) ->
         @.userstoriesRaw = @.userstoriesRaw.filter (it) => it.id != usModel.id
-
         delete @.order[usModel.id]
 
         status = String(usModel.status)
@@ -75,23 +74,21 @@ class KanbanUserstoriesService extends taiga.Service
         @.refreshSwimlanes()
 
     # don't call refresh to prevent unnecessary mutations in every single us
-    add: (usList) ->
-        if !Array.isArray(usList)
-            usList = [usList]
+    add: (usrStoriesToAdd) ->
+        usrStoriesToAdd = [usrStoriesToAdd] unless Array.isArray(usrStoriesToAdd)
 
-        usList = _.sortBy usList, ['kanban_order']
+        usrStoriesToAdd = _.sortBy usrStoriesToAdd, ['kanban_order']
 
         @.userstoriesRaw = @.userstoriesRaw.filter (us) =>
-            return !usList.find (it) => it.id == us.id
-        @.userstoriesRaw = @.userstoriesRaw.concat(usList)
-        @.userstoriesRaw = @.userstoriesRaw.map (us) =>
-            return us
+            not usrStoriesToAdd.find (it) => it.id == us.id
+
+        @.userstoriesRaw = @.userstoriesRaw.concat(usrStoriesToAdd)
 
         @.refreshRawOrder()
 
         @.userstoriesRaw = _.sortBy @.userstoriesRaw, [(it) => @.order[it.id]]
 
-        for key, usModel of usList
+        for key, usModel of usrStoriesToAdd
             us = @.retrieveUserStoryData(usModel)
             status = String(usModel.status)
 
@@ -114,11 +111,9 @@ class KanbanUserstoriesService extends taiga.Service
         @.archivedStatus.push(statusId)
 
     isUsInArchivedHiddenStatus: (usId) ->
-        # us = @.getUsModel(usId)
         us = @.usMap.get(usId)
         status = us?.getIn(['model', 'status'])
-        return @.archivedStatus.indexOf(status) != -1 &&
-            @.statusHide.indexOf(status) != -1
+        return @.archivedStatus.includes(status) && @.statusHide.includes(status)
 
     hideStatus: (statusId) ->
         @.deleteStatus(statusId)
@@ -129,7 +124,7 @@ class KanbanUserstoriesService extends taiga.Service
 
     getStatus: (statusId, swimlaneId) ->
         return _.filter @.userstoriesRaw, (it) =>
-            return it.status == statusId && (!swimlaneId || it.swimlane == swimlaneId)
+            it.status == statusId && (!swimlaneId || it.swimlane == swimlaneId)
 
     deleteStatus: (statusId) ->
         toDelete = _.filter @.userstoriesRaw, (us) -> return us.status == statusId
@@ -159,7 +154,7 @@ class KanbanUserstoriesService extends taiga.Service
             previousUsIndex = 0
 
         usByStatusWithoutMoved = _.filter usByStatus, (listIt) ->
-            return !_.find usList, (moveIt) -> return listIt.id == moveIt
+            not _.find usList, (moveIt) -> listIt.id == moveIt
 
         afterDestination = _.slice(usByStatusWithoutMoved, previousUsIndex)
 
@@ -275,17 +270,17 @@ class KanbanUserstoriesService extends taiga.Service
             @.refreshSwimlanes()
 
     refreshSwimlanes: () ->
-        if !@.swimlanes || !@.swimlanes.length
+        if !@.swimlanes?.length
             return
 
         @.swimlanesList = Immutable.List()
         @.usByStatusSwimlanes = Immutable.Map()
 
         userstoriesNoSwimlane = @.userstoriesRaw.filter (us) =>
-            return us.swimlane == null
+            us.swimlane == null
 
         emptySwimlaneExists = @.swimlanesList.filter (swimlane) =>
-            return swimlane.id == null
+            swimlane.id == null
 
         if userstoriesNoSwimlane.length && !emptySwimlaneExists.size
             @.swimlanes.forEach (swimlane) =>
@@ -298,7 +293,6 @@ class KanbanUserstoriesService extends taiga.Service
                 name: @translate.instant("KANBAN.UNCLASSIFIED_USER_STORIES")
             }
             @.swimlanesList = @.swimlanesList.insert(0, emptySwimlane)
-
         else
             @.swimlanes.forEach (swimlane) =>
                 if (!@.swimlanesList.includes(swimlane))
