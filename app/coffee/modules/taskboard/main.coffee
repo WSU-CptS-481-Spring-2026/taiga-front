@@ -7,47 +7,30 @@
 ###
 
 taiga = @.taiga
-toggleText = @.taiga.toggleText
 mixOf = @.taiga.mixOf
 groupBy = @.taiga.groupBy
-bindOnce = @.taiga.bindOnce
-scopeDefer = @.taiga.scopeDefer
 timeout = @.taiga.timeout
 bindMethods = @.taiga.bindMethods
 debounceLeading = @.taiga.debounceLeading
 
 module = angular.module("taigaTaskboard")
 
-
 #############################################################################
 ## Taskboard Controller
 #############################################################################
+injectList = [
+  "$scope", "$rootScope", "$tgRepo", "$tgConfirm",
+  "$tgResources", "tgResources", "$routeParams", "$q",
+  "tgAppMetaService", "$tgLocation", "$tgNavUrls",
+  "$tgEvents", "$tgAnalytics", "$translate",
+  "tgErrorHandlingService",
+  "tgTaskboardTasks", "tgTaskboardIssues",
+  "$tgStorage", "tgFilterRemoteStorageService",
+  "tgLightboxFactory", "$timeout", "tgProjectService"
+]
 
 class TaskboardController extends mixOf(taiga.Controller, taiga.PageMixin, taiga.FiltersMixin)
-    @.$inject = [
-        "$scope",
-        "$rootScope",
-        "$tgRepo",
-        "$tgConfirm",
-        "$tgResources",
-        "tgResources"
-        "$routeParams",
-        "$q",
-        "tgAppMetaService",
-        "$tgLocation",
-        "$tgNavUrls"
-        "$tgEvents"
-        "$tgAnalytics",
-        "$translate",
-        "tgErrorHandlingService",
-        "tgTaskboardTasks",
-        "tgTaskboardIssues",
-        "$tgStorage",
-        "tgFilterRemoteStorageService",
-        "tgLightboxFactory",
-        "$timeout",
-        "tgProjectService"
-    ]
+    @.$inject = injectList
 
     excludePrefix: "exclude_"
     filterCategories: [
@@ -71,9 +54,8 @@ class TaskboardController extends mixOf(taiga.Controller, taiga.PageMixin, taiga
         'tags'
     ]
 
-    constructor: (@scope, @rootscope, @repo, @confirm, @rs, @rs2, @params, @q, @appMetaService, @location, @navUrls,
-                  @events, @analytics, @translate, @errorHandlingService, @taskboardTasksService,
-                  @taskboardIssuesService, @storage, @filterRemoteStorageService, @lightboxFactory, @timeout, @projectService) ->
+    constructor: (deps) ->
+        Object.assign @, deps
         bindMethods(@)
         @taskboardTasksService.reset()
         @scope.userstories = []
